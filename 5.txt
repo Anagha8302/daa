@@ -1,0 +1,272 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Structure to represent an edge in the graph
+struct Edge {
+    int src, dest, weight;
+};
+
+// Structure to represent a subset for union-find
+struct Subset {
+    int parent;
+    int rank;
+};
+
+// Function to create a graph of V vertices and E edges
+struct Edge* createGraph(int V, int E) {
+    struct Edge* graph = (struct Edge*)malloc(E * sizeof(struct Edge));
+    return graph;
+}
+
+// Function to find the parent of a node in a subset
+int find(struct Subset subsets[], int i) {
+    if (subsets[i].parent != i)
+        subsets[i].parent = find(subsets, subsets[i].parent);
+    return subsets[i].parent;
+}
+
+// Function to perform union of two subsets
+void Union(struct Subset subsets[], int x, int y) {
+    int xroot = find(subsets, x);
+    int yroot = find(subsets, y);
+
+    if (subsets[xroot].rank < subsets[yroot].rank)
+        subsets[xroot].parent = yroot;
+    else if (subsets[xroot].rank > subsets[yroot].rank)
+        subsets[yroot].parent = xroot;
+    else {
+        subsets[yroot].parent = xroot;
+        subsets[xroot].rank++;
+    }
+}
+
+// Function to perform Kruskal's algorithm to find the minimum cost spanning tree
+void KruskalMST(int V, int E, struct Edge* graph) {
+    struct Edge result[V]; // Stores the result MST
+    int e = 0; // Index variable for sorted edges
+    int i = 0; // Index variable for result array
+
+    // Step 1: Sort all the edges in non-decreasing order of their weight
+    qsort(graph, E, sizeof(graph[0]), [](const void* a, const void* b) -> int {
+        return ((struct Edge*)a)->weight - ((struct Edge*)b)->weight;
+    });
+
+    // Allocate memory for creating V subsets
+    struct Subset* subsets = (struct Subset*)malloc(V * sizeof(struct Subset));
+
+    // Initialize V subsets with single elements
+    for (int v = 0; v < V; v++) {
+        subsets[v].parent = v;
+        subsets[v].rank = 0;
+    }
+
+    // Number of edges to be taken is equal to V-1
+    while (e < V - 1 && i < E) {
+        // Step 2: Pick the smallest edge. Check if it forms a cycle with the spanning tree formed so far.
+        struct Edge next_edge = graph[i++];
+
+        int x = find(subsets, next_edge.src);
+        int y = find(subsets, next_edge.dest);
+
+        // If including this edge doesn't cause cycle, include it in result and increment the index of result for next edge
+        if (x != y) {
+            result[e++] = next_edge;
+            Union(subsets, x, y);
+        }
+    }
+
+    // Print the constructed MST
+    printf("Edges in the Minimum Cost Spanning Tree:\n");
+    int minimumCost = 0;
+    for (int j = 0; j < e; j++) {
+        printf("(%d, %d) -- weight %d\n", result[j].src, result[j].dest, result[j].weight);
+        minimumCost += result[j].weight;
+    }
+    printf("Minimum Cost Spanning Tree Weight: %d\n", minimumCost);
+
+    free(subsets);
+}
+
+int main() {
+    int V, E;
+
+    printf("Enter the number of vertices in the graph: ");
+    scanf("%d", &V);
+
+    printf("Enter the number of edges in the graph: ");
+    scanf("%d", &E);
+
+    struct Edge* graph = createGraph(V, E);
+
+    printf("Enter the source, destination, and weight of each edge:\n");
+    for (int i = 0; i < E; i++) {
+        printf("Edge %d: ", i + 1);
+        scanf("%d %d %d", &graph[i].src, &graph[i].dest, &graph[i].weight);
+    }
+
+    // Find the Minimum Cost Spanning Tree using Kruskal's algorithm
+    KruskalMST(V, E, graph);
+
+    free(graph);
+
+    return 0;
+}
+
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Structure for a Huffman tree node
+struct MinHeapNode {
+    char data; // Input character
+    unsigned freq; // Frequency of the character
+    struct MinHeapNode *left, *right; // Left and right child pointers
+};
+
+// Structure for a MinHeap (collection of Huffman tree nodes)
+struct MinHeap {
+    unsigned size; // Current size of min heap
+    unsigned capacity; // Capacity of min heap
+    struct MinHeapNode **array; // Array of min heap node pointers
+};
+
+// Function to create a new min heap node
+struct MinHeapNode* newNode(char data, unsigned freq) {
+    struct MinHeapNode* temp = (struct MinHeapNode*)malloc(sizeof(struct MinHeapNode));
+    temp->left = temp->right = NULL;
+    temp->data = data;
+    temp->freq = freq;
+    return temp;
+}
+
+// Function to create a min heap of given capacity
+struct MinHeap* createMinHeap(unsigned capacity) {
+    struct MinHeap* minHeap = (struct MinHeap*)malloc(sizeof(struct MinHeap));
+    minHeap->size = 0;
+    minHeap->capacity = capacity;
+    minHeap->array = (struct MinHeapNode**)malloc(minHeap->capacity * sizeof(struct MinHeapNode*));
+    return minHeap;
+}
+
+// Function to swap two min heap nodes
+void swapMinHeapNode(struct MinHeapNode** a, struct MinHeapNode** b) {
+    struct MinHeapNode* t = *a;
+    *a = *b;
+    *b = t;
+}
+
+// Function to heapify at a given index
+void minHeapify(struct MinHeap* minHeap, int idx) {
+    int smallest = idx;
+    int left = 2 * idx + 1;
+    int right = 2 * idx + 2;
+
+    if (left < minHeap->size && minHeap->array[left]->freq < minHeap->array[smallest]->freq)
+        smallest = left;
+
+    if (right < minHeap->size && minHeap->array[right]->freq < minHeap->array[smallest]->freq)
+        smallest = right;
+
+    if (smallest != idx) {
+        swapMinHeapNode(&minHeap->array[smallest], &minHeap->array[idx]);
+        minHeapify(minHeap, smallest);
+    }
+}
+
+// Function to check if size of heap is 1 or not
+int isSizeOne(struct MinHeap* minHeap) {
+    return (minHeap->size == 1);
+}
+
+// Function to extract minimum value node from heap
+struct MinHeapNode* extractMin(struct MinHeap* minHeap) {
+    struct MinHeapNode* temp = minHeap->array[0];
+    minHeap->array[0] = minHeap->array[minHeap->size - 1];
+    --minHeap->size;
+    minHeapify(minHeap, 0);
+    return temp;
+}
+
+// Function to insert a new node to min heap
+void insertMinHeap(struct MinHeap* minHeap, struct MinHeapNode* minHeapNode) {
+    ++minHeap->size;
+    int i = minHeap->size - 1;
+    while (i && minHeapNode->freq < minHeap->array[(i - 1) / 2]->freq) {
+        minHeap->array[i] = minHeap->array[(i - 1) / 2];
+        i = (i - 1) / 2;
+    }
+    minHeap->array[i] = minHeapNode;
+}
+
+// Function to build Huffman tree
+struct MinHeapNode* buildHuffmanTree(char data[], int freq[], int size) {
+    struct MinHeapNode *left, *right, *top;
+    struct MinHeap* minHeap = createMinHeap(size);
+    for (int i = 0; i < size; ++i)
+        insertMinHeap(minHeap, newNode(data[i], freq[i]));
+    while (!isSizeOne(minHeap)) {
+        left = extractMin(minHeap);
+        right = extractMin(minHeap);
+        top = newNode('$', left->freq + right->freq);
+        top->left = left;
+        top->right = right;
+        insertMinHeap(minHeap, top);
+    }
+    return extractMin(minHeap);
+}
+
+// Function to print Huffman codes from the root of Huffman Tree
+void printCodes(struct MinHeapNode* root, int arr[], int top) {
+    if (root->left) {
+        arr[top] = 0;
+        printCodes(root->left, arr, top + 1);
+    }
+    if (root->right) {
+        arr[top] = 1;
+        printCodes(root->right, arr, top + 1);
+    }
+    if (!(root->left) && !(root->right)) {
+        printf("%c: ", root->data);
+        for (int i = 0; i < top; ++i)
+            printf("%d", arr[i]);
+        printf("\n");
+    }
+}
+
+// Function to calculate best-case complexity of Huffman algorithm
+// In the best case, all characters have equal frequency
+// The time complexity of heap operations is O(n) and creating the Huffman tree has a time complexity of O(nlogn)
+// So, the overall best-case time complexity is O(nlogn)
+// Where n is the number of unique characters
+void bestCaseComplexity(int n) {
+    printf("Best Case Complexity: O(%d log %d)\n", n, n);
+}
+
+// Function to calculate worst-case complexity of Huffman algorithm
+// In the worst case, all characters have different frequencies
+// The time complexity of heap operations is O(logn) and creating the Huffman tree has a time complexity of O(nlogn)
+// So, the overall worst-case time complexity is O(nlogn)
+// Where n is the number of unique characters
+void worstCaseComplexity(int n) {
+    printf("Worst Case Complexity: O(%d log %d)\n", n, n);
+}
+
+// Driver program to test above functions
+int main() {
+    char data[] = {'a', 'b', 'c', 'd', 'e', 'f'};
+    int freq[] = {5, 9, 12, 13, 16, 45};
+    int size = sizeof(data) / sizeof(data[0]);
+    struct MinHeapNode* root = buildHuffmanTree(data, freq, size);
+    int arr[100], top = 0;
+    printf("Huffman Codes:\n");
+    printCodes(root, arr, top);
+
+    // Calculate best-case and worst-case complexities
+    bestCaseComplexity(size);
+    worstCaseComplexity(size);
+
+    return 0;
+}

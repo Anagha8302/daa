@@ -1,0 +1,85 @@
+#include <stdio.h>
+#include <limits.h>
+
+#define MAX_SIZE 10
+
+// Function to find the minimum number of multiplications needed to multiply a chain of matrices
+int matrixChainOrder(int dims[], int n) {
+    int dp[MAX_SIZE][MAX_SIZE]; // Dynamic programming table
+
+    // Initialize the dp table
+    for (int i = 1; i < n; i++)
+        dp[i][i] = 0;
+
+    // Fill the dp table diagonally
+    for (int len = 2; len < n; len++) {
+        for (int i = 1; i < n - len + 1; i++) {
+            int j = i + len - 1;
+            dp[i][j] = INT_MAX;
+            for (int k = i; k <= j - 1; k++) {
+                int count = dp[i][k] + dp[k + 1][j] + dims[i - 1] * dims[k] * dims[j];
+                if (count < dp[i][j])
+                    dp[i][j] = count;
+            }
+        }
+    }
+    return dp[1][n - 1];
+}
+
+int main() {
+    int dims[] = {10, 30, 5, 60}; // Dimensions of matrices
+    int n = sizeof(dims) / sizeof(dims[0]); // Number of matrices
+
+    printf("Minimum number of multiplications needed: %d\n", matrixChainOrder(dims, n));
+
+    return 0;
+}
+
+
+
+#include <stdio.h>
+#include <limits.h>
+
+#define MAX_KEYS 10
+
+// Function to calculate sum of probabilities
+float sum(float freq[], int i, int j) {
+    float s = 0;
+    for (int k = i; k <= j; k++)
+        s += freq[k];
+    return s;
+}
+
+// Function to calculate the cost of a binary search tree
+float optimalSearchTree(float freq[], int n) {
+    float cost[MAX_KEYS][MAX_KEYS];
+
+    // For single keys, cost is equal to the frequency of the key
+    for (int i = 0; i < n; i++)
+        cost[i][i] = freq[i];
+
+    // For lengths greater than 1, consider all subarrays and choose the one with minimum cost
+    for (int length = 2; length <= n; length++) {
+        for (int i = 0; i <= n - length + 1; i++) {
+            int j = i + length - 1;
+            cost[i][j] = INT_MAX;
+
+            // Try making each key in the range the root and recursively calculate cost
+            for (int r = i; r <= j; ++r) {
+                float c = ((r > i) ? cost[i][r - 1] : 0) +
+                          ((r < j) ? cost[r + 1][j] : 0) +
+                          sum(freq, i, j);
+                if (c < cost[i][j])
+                    cost[i][j] = c;
+            }
+        }
+    }
+    return cost[0][n - 1];
+}
+
+int main() {
+    float freq[MAX_KEYS] = {0.1, 0.2, 0.3, 0.4};
+    int n = sizeof(freq) / sizeof(freq[0]);
+    printf("Cost of optimal binary search tree: %.2f\n", optimalSearchTree(freq, n));
+    return 0;
+}

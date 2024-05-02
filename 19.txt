@@ -1,0 +1,152 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+#define MAX_VERTICES 100
+
+// Function to print the path
+void printPath(int path[], int V) {
+    printf("Hamiltonian cycle exists: ");
+    for (int i = 0; i < V; i++)
+        printf("%d ", path[i]);
+    printf("%d\n", path[0]);
+}
+
+// Function to check if the vertex v can be added at index 'pos' in the Hamiltonian cycle 'path'
+bool isSafe(int v, bool graph[MAX_VERTICES][MAX_VERTICES], int path[], int pos, int V) {
+    if (!graph[path[pos - 1]][v])
+        return false;
+
+    for (int i = 0; i < pos; i++)
+        if (path[i] == v)
+            return false;
+
+    return true;
+}
+
+// Recursive function to solve the Hamiltonian cycle problem
+bool hamCycleUtil(bool graph[MAX_VERTICES][MAX_VERTICES], int path[], int pos, int V) {
+    if (pos == V) {
+        if (graph[path[pos - 1]][path[0]])
+            return true;
+        else
+            return false;
+    }
+
+    for (int v = 1; v < V; v++) {
+        if (isSafe(v, graph, path, pos, V)) {
+            path[pos] = v;
+            if (hamCycleUtil(graph, path, pos + 1, V))
+                return true;
+            path[pos] = -1; // Backtrack
+        }
+    }
+
+    return false;
+}
+
+// Function to check if a given graph contains a Hamiltonian cycle
+bool hamCycle(bool graph[MAX_VERTICES][MAX_VERTICES], int V) {
+    int path[MAX_VERTICES];
+    for (int i = 0; i < V; i++)
+        path[i] = -1;
+
+    path[0] = 0;
+    if (!hamCycleUtil(graph, path, 1, V)) {
+        printf("No Hamiltonian cycle exists\n");
+        return false;
+    }
+
+    printPath(path, V);
+    return true;
+}
+
+int main() {
+    int V;
+    printf("Enter the number of vertices: ");
+    scanf("%d", &V);
+
+    bool graph[MAX_VERTICES][MAX_VERTICES];
+    printf("Enter the adjacency matrix:\n");
+    for (int i = 0; i < V; i++) {
+        for (int j = 0; j < V; j++) {
+            scanf("%d", &graph[i][j]);
+        }
+    }
+
+    hamCycle(graph, V);
+
+    return 0;
+}
+
+#include <stdio.h>
+#include <stdbool.h>
+
+#define N 4
+
+// Function to print the board configuration with queens
+void printBoard(int board[N][N]) {
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++)
+            printf("%c ", board[i][j] ? 'Q' : '-');
+        printf("\n");
+    }
+}
+
+// Function to check if a queen can be placed at board[row][col]
+bool isSafe(int board[N][N], int row, int col) {
+    int i, j;
+
+    // Check this row on the left side
+    for (i = 0; i < col; i++)
+        if (board[row][i])
+            return false;
+
+    // Check upper diagonal on left side
+    for (i = row, j = col; i >= 0 && j >= 0; i--, j--)
+        if (board[i][j])
+            return false;
+
+    // Check lower diagonal on left side
+    for (i = row, j = col; j >= 0 && i < N; i++, j--)
+        if (board[i][j])
+            return false;
+
+    return true;
+}
+
+// Recursive function to solve N Queens problem
+bool solveNQUtil(int board[N][N], int col) {
+    if (col >= N)
+        return true;
+
+    for (int i = 0; i < N; i++) {
+        if (isSafe(board, i, col)) {
+            board[i][col] = 1;
+
+            if (solveNQUtil(board, col + 1))
+                return true;
+
+            board[i][col] = 0; // Backtrack
+        }
+    }
+
+    return false;
+}
+
+// Function to solve N Queens problem
+bool solveNQ() {
+    int board[N][N] = {0};
+
+    if (solveNQUtil(board, 0) == false) {
+        printf("Solution does not exist\n");
+        return false;
+    }
+
+    printBoard(board);
+    return true;
+}
+
+int main() {
+    solveNQ();
+    return 0;
+}

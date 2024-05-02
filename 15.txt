@@ -1,0 +1,192 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_ITEMS 100
+
+// Structure to represent an item
+struct Item {
+    int weight;
+    int value;
+};
+
+// Structure to represent a node in the search tree
+struct Node {
+    int level;
+    int profit;
+    int weight;
+    float bound;
+};
+
+// Function to calculate the bound of a node
+float bound(struct Node u, int n, int W, struct Item arr[]) {
+    if (u.weight >= W)
+        return 0;
+
+    float profit_bound = u.profit;
+    int j = u.level + 1;
+    int totweight = u.weight;
+
+    while ((j < n) && (totweight + arr[j].weight <= W)) {
+        totweight += arr[j].weight;
+        profit_bound += arr[j].value;
+        j++;
+    }
+
+    if (j < n)
+        profit_bound += (W - totweight) * arr[j].value / arr[j].weight;
+
+    return profit_bound;
+}
+
+// Function to solve 0/1 knapsack using LCBB
+int knapsackLCBB(int W, struct Item arr[], int n) {
+    struct Node u, v;
+    int maxProfit = 0;
+    struct Node* queue = (struct Node*)malloc(sizeof(struct Node) * (MAX_ITEMS + 1));
+
+    // Initialize the root node
+    v.level = -1;
+    v.profit = v.weight = 0;
+    v.bound = bound(v, n, W, arr);
+    int front = 0, rear = 0;
+    queue[rear] = v;
+
+    while (front <= rear) {
+        // Dequeue a node
+        u = queue[front];
+        front++;
+
+        // If it is starting node, assign level 0
+        if (u.level == -1)
+            v.level = 0;
+
+        // If the node is the last node in its level
+        if (u.level == n - 1)
+            continue;
+
+        // Increment level
+        v.level = u.level + 1;
+
+        // Set the weight and profit values of the new node
+        v.weight = u.weight + arr[v.level].weight;
+        v.profit = u.profit + arr[v.level].value;
+
+        // If the new node's weight is less than or equal to W and its profit is greater than maxProfit, update maxProfit
+        if (v.weight <= W && v.profit > maxProfit)
+            maxProfit = v.profit;
+
+        // Set the bound of the new node
+        v.bound = bound(v, n, W, arr);
+
+        // If the bound of the new node is greater than maxProfit, enqueue it
+        if (v.bound > maxProfit)
+            queue[++rear] = v;
+
+        // Set the weight and profit values of the new node if the new node is not included
+        v.weight = u.weight;
+        v.profit = u.profit;
+
+        // Set the bound of the new node
+        v.bound = bound(v, n, W, arr);
+
+        // If the bound of the new node is greater than maxProfit, enqueue it
+        if (v.bound > maxProfit)
+            queue[++rear] = v;
+    }
+
+    free(queue);
+    return maxProfit;
+}
+
+int main() {
+    int n, W;
+    printf("Enter the number of items: ");
+    scanf("%d", &n);
+
+    struct Item arr[n];
+    printf("Enter the weight and value of each item:\n");
+    for (int i = 0; i < n; i++)
+        scanf("%d %d", &arr[i].weight, &arr[i].value);
+
+    printf("Enter the capacity of the knapsack: ");
+    scanf("%d", &W);
+
+    int maxProfit = knapsackLCBB(W, arr, n);
+    printf("Maximum profit: %d\n", maxProfit);
+
+    return 0;
+}
+
+
+#include <stdio.h>
+#include <stdbool.h>
+
+#define MAX_VERTICES 100
+
+// Function to print the solution
+void printSolution(int color[], int V) {
+    printf("Vertex   Color\n");
+    for (int i = 0; i < V; i++)
+        printf("%d         %d\n", i, color[i]);
+}
+
+// Function to check if it's safe to assign color c to vertex v
+bool isSafe(int v, bool graph[MAX_VERTICES][MAX_VERTICES], int color[], int c, int V) {
+    for (int i = 0; i < V; i++) {
+        if (graph[v][i] && c == color[i])
+            return false;
+    }
+    return true;
+}
+
+// Recursive function to assign colors to vertices
+bool graphColoringUtil(bool graph[MAX_VERTICES][MAX_VERTICES], int m, int color[], int v, int V) {
+    if (v == V)
+        return true;
+
+    for (int c = 1; c <= m; c++) {
+        if (isSafe(v, graph, color, c, V)) {
+            color[v] = c;
+            if (graphColoringUtil(graph, m, color, v + 1, V))
+                return true;
+            color[v] = 0;
+        }
+    }
+    return false;
+}
+
+// Main function to solve graph coloring problem
+bool graphColoring(bool graph[MAX_VERTICES][MAX_VERTICES], int m, int V) {
+    int color[V];
+    for (int i = 0; i < V; i++)
+        color[i] = 0;
+
+    if (!graphColoringUtil(graph, m, color, 0, V)) {
+        printf("Solution does not exist\n");
+        return false;
+    }
+
+    printSolution(color, V);
+    return true;
+}
+
+int main() {
+    int V, m;
+    printf("Enter the number of vertices: ");
+    scanf("%d", &V);
+
+    printf("Enter the number of colors: ");
+    scanf("%d", &m);
+
+    bool graph[MAX_VERTICES][MAX_VERTICES];
+    printf("Enter the adjacency matrix:\n");
+    for (int i = 0; i < V; i++) {
+        for (int j = 0; j < V; j++) {
+            scanf("%d", &graph[i][j]);
+        }
+    }
+
+    graphColoring(graph, m, V);
+
+    return 0;
+}

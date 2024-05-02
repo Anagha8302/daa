@@ -1,0 +1,76 @@
+#include <stdio.h>
+#include <limits.h>
+
+#define MAX_KEYS 10
+
+// Utility function to calculate sum of probabilities
+float sum(float freq[], int i, int j) {
+    float s = 0;
+    for (int k = i; k <= j; k++)
+        s += freq[k];
+    return s;
+}
+
+// Function to calculate minimum cost of searching keys from i to j
+float optimalSearchTree(float freq[], int i, int j) {
+    if (i > j)
+        return 0;
+    if (i == j)
+        return freq[i];
+    
+    float min_cost = INT_MAX;
+    
+    // Try making each key in the range the root and recursively calculate cost
+    for (int r = i; r <= j; ++r) {
+        float cost = optimalSearchTree(freq, i, r - 1) + 
+                     optimalSearchTree(freq, r + 1, j) + 
+                     sum(freq, i, j);
+        if (cost < min_cost)
+            min_cost = cost;
+    }
+    
+    return min_cost;
+}
+
+int main() {
+    float freq[MAX_KEYS] = {0.1, 0.2, 0.3, 0.4};
+    printf("Minimum cost of optimal binary search tree: %.2f\n", optimalSearchTree(freq, 0, MAX_KEYS - 1));
+    return 0;
+}
+
+
+#include <stdio.h>
+
+#define MAX_SIZE 100
+
+// Function to print subsets with the given sum using backtracking
+void findSubset(int weights[], int n, int sum, int curSum, int index, int subset[], int subsetSize) {
+    if (curSum == sum) {
+        printf("Subset with sum %d: ", sum);
+        for (int i = 0; i < subsetSize; i++)
+            printf("%d ", subset[i]);
+        printf("\n");
+        return;
+    }
+
+    if (index == n || curSum > sum)
+        return;
+
+    // Include the current element in the subset
+    subset[subsetSize] = weights[index];
+    findSubset(weights, n, sum, curSum + weights[index], index + 1, subset, subsetSize + 1);
+
+    // Exclude the current element from the subset
+    findSubset(weights, n, sum, curSum, index + 1, subset, subsetSize);
+}
+
+int main() {
+    int weights[] = {10, 7, 5, 18, 12, 20, 15};
+    int n = sizeof(weights) / sizeof(weights[0]);
+    int sum = 35;
+
+    int subset[MAX_SIZE];
+    findSubset(weights, n, sum, 0, 0, subset, 0);
+
+    return 0;
+}

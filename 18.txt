@@ -1,0 +1,135 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+#define MAX_VERTICES 100
+
+// Function to print the solution
+void printSolution(int color[], int V) {
+    printf("Vertex   Color\n");
+    for (int i = 0; i < V; i++)
+        printf("%d         %d\n", i, color[i]);
+}
+
+// Function to check if it's safe to assign color c to vertex v
+bool isSafe(int v, bool graph[MAX_VERTICES][MAX_VERTICES], int color[], int c, int V) {
+    for (int i = 0; i < V; i++) {
+        if (graph[v][i] && c == color[i])
+            return false;
+    }
+    return true;
+}
+
+// Function to perform graph coloring
+bool graphColoringUtil(bool graph[MAX_VERTICES][MAX_VERTICES], int m, int color[], int v, int V) {
+    if (v == V)
+        return true;
+
+    for (int c = 1; c <= m; c++) {
+        if (isSafe(v, graph, color, c, V)) {
+            color[v] = c;
+            if (graphColoringUtil(graph, m, color, v + 1, V))
+                return true;
+            color[v] = 0;
+        }
+    }
+    return false;
+}
+
+// Function to check if a given graph can be colored with at most m colors
+bool graphColoring(bool graph[MAX_VERTICES][MAX_VERTICES], int m, int V) {
+    int color[MAX_VERTICES];
+    for (int i = 0; i < V; i++)
+        color[i] = 0;
+
+    if (!graphColoringUtil(graph, m, color, 0, V)) {
+        printf("Solution does not exist\n");
+        return false;
+    }
+
+    printSolution(color, V);
+    return true;
+}
+
+int main() {
+    int V, m;
+    printf("Enter the number of vertices: ");
+    scanf("%d", &V);
+
+    printf("Enter the number of colors: ");
+    scanf("%d", &m);
+
+    bool graph[MAX_VERTICES][MAX_VERTICES];
+    printf("Enter the adjacency matrix:\n");
+    for (int i = 0; i < V; i++) {
+        for (int j = 0; j < V; j++) {
+            scanf("%d", &graph[i][j]);
+        }
+    }
+
+    graphColoring(graph, m, V);
+
+    return 0;
+}
+
+#include <stdio.h>
+#include <stdbool.h>
+
+#define MAX_VERTICES 100
+
+// Function to find live nodes, E-nodes, and dead nodes
+void findNodes(bool graph[MAX_VERTICES][MAX_VERTICES], int V) {
+    bool live[MAX_VERTICES] = {false};
+    bool dead[MAX_VERTICES] = {false};
+    int eNodes = 0;
+
+    // Find live nodes and dead nodes
+    for (int i = 0; i < V; i++) {
+        bool hasOutgoingEdge = false;
+        for (int j = 0; j < V; j++) {
+            if (graph[i][j]) {
+                live[i] = true;
+                hasOutgoingEdge = true;
+                eNodes++;
+            }
+        }
+        if (!hasOutgoingEdge)
+            dead[i] = true;
+    }
+
+    // Print live nodes
+    printf("Live nodes: ");
+    for (int i = 0; i < V; i++) {
+        if (live[i])
+            printf("%d ", i);
+    }
+    printf("\n");
+
+    // Print E-nodes count
+    printf("E-nodes count: %d\n", eNodes);
+
+    // Print dead nodes
+    printf("Dead nodes: ");
+    for (int i = 0; i < V; i++) {
+        if (dead[i])
+            printf("%d ", i);
+    }
+    printf("\n");
+}
+
+int main() {
+    int V;
+    printf("Enter the number of vertices: ");
+    scanf("%d", &V);
+
+    bool graph[MAX_VERTICES][MAX_VERTICES];
+    printf("Enter the adjacency matrix:\n");
+    for (int i = 0; i < V; i++) {
+        for (int j = 0; j < V; j++) {
+            scanf("%d", &graph[i][j]);
+        }
+    }
+
+    findNodes(graph, V);
+
+    return 0;
+}
